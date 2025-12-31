@@ -1,6 +1,5 @@
 """Tests for the Playwright to Robot Framework converter."""
 
-import pytest
 from robotframework_browser_recorder.converter.playwright_to_robot import (
     PlaywrightToRobotConverter,
 )

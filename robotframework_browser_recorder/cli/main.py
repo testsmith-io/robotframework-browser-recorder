@@ -2,7 +2,6 @@
 
 import argparse
 import sys
-from pathlib import Path
 from robotframework_browser_recorder.recorder import BrowserRecorder
 
 
@@ -83,7 +82,7 @@ Examples:
 
     try:
         output_file = recorder.record(headless=args.headless)
-        print(f"\nSuccess! You can now run your test with:")
+        print("\nSuccess! You can now run your test with:")
         print(f"  robot {output_file}")
 
     except KeyboardInterrupt:

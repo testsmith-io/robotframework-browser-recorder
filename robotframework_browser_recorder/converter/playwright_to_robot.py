@@ -178,10 +178,11 @@ class PlaywrightToRobotConverter:
         parts = line.split(".fill(")
         if len(parts) > 1:
             # Match two quoted strings: .fill("selector", "value")
-            match = re.search(
-                r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\s*,\s*["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)',
-                parts[1],
+            pattern = (
+                r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\s*,\s*'
+                r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)'
             )
+            match = re.search(pattern, parts[1])
             if match:
                 selector = match.group(1).replace(r"\"", '"').replace(r"\'", "'")
                 value = match.group(2).replace(r"\"", '"').replace(r"\'", "'")
@@ -194,10 +195,11 @@ class PlaywrightToRobotConverter:
         parts = line.split(".press(")
         if len(parts) > 1:
             # Match two quoted strings: .press("selector", "key")
-            match = re.search(
-                r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\s*,\s*["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)',
-                parts[1],
+            pattern = (
+                r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\s*,\s*'
+                r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)'
             )
+            match = re.search(pattern, parts[1])
             if match:
                 selector = match.group(1).replace(r"\"", '"').replace(r"\'", "'")
                 key = match.group(2).replace(r"\"", '"').replace(r"\'", "'")
@@ -210,10 +212,11 @@ class PlaywrightToRobotConverter:
         parts = line.split(".select_option(")
         if len(parts) > 1:
             # Match two quoted strings: .select_option("selector", "value")
-            match = re.search(
-                r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\s*,\s*["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)',
-                parts[1],
+            pattern = (
+                r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\s*,\s*'
+                r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)'
             )
+            match = re.search(pattern, parts[1])
             if match:
                 selector = match.group(1).replace(r"\"", '"').replace(r"\'", "'")
                 value = match.group(2).replace(r"\"", '"').replace(r"\'", "'")
@@ -260,7 +263,6 @@ class PlaywrightToRobotConverter:
 
     def _convert_press(self, action: Dict) -> str:
         """Convert press action to Robot Framework."""
-        selector = action.get("selector", "")
         key = action.get("key", "")
         return f"Keyboard Key{self.indent}press{self.indent}{key}"
 

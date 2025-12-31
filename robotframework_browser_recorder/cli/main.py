@@ -20,9 +20,6 @@ Examples:
 
   # Record with custom output file
   rfbrowser-record --url https://example.com --output my_test.robot
-
-  # Record in headless mode
-  rfbrowser-record --url https://example.com --headless
         """,
     )
 
@@ -60,12 +57,6 @@ Examples:
     )
 
     parser.add_argument(
-        "--headless",
-        action="store_true",
-        help="Run browser in headless mode",
-    )
-
-    parser.add_argument(
         "--version",
         action="version",
         version="%(prog)s 0.1.0",
@@ -81,7 +72,7 @@ Examples:
     )
 
     try:
-        output_file = recorder.record(headless=args.headless)
+        output_file = recorder.record()
         print("\nSuccess! You can now run your test with:")
         print(f"  robot {output_file}")
 

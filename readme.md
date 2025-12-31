@@ -82,7 +82,6 @@ rfbrowser-record [OPTIONS]
 | `--browser` | `-b` | Browser to use (chromium, firefox, webkit) | chromium |
 | `--output` | `-o` | Output file path | recorded_test.robot |
 | `--test-name` | `-n` | Name of the test case | Recorded Test |
-| `--headless` | | Run browser in headless mode | False |
 | `--version` | | Show version | |
 
 ### Examples
@@ -97,12 +96,6 @@ rfbrowser-record --browser firefox --url https://example.com
 
 ```bash
 rfbrowser-record --url https://example.com --output my_test.robot
-```
-
-#### Headless recording
-
-```bash
-rfbrowser-record --headless --url https://example.com
 ```
 
 ### Python API

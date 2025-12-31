@@ -32,11 +32,8 @@ class BrowserRecorder:
         self.url = url
         self.converter = PlaywrightToRobotConverter()
 
-    def record(self, headless: bool = False) -> str:
+    def record(self) -> str:
         """Start recording browser interactions.
-
-        Args:
-            headless: Run browser in headless mode
 
         Returns:
             Path to the generated Robot Framework test file
@@ -55,9 +52,6 @@ class BrowserRecorder:
                 "-o",
                 tmp_path,
             ]
-
-            if headless:
-                cmd.append("--headless")
 
             if self.url:
                 cmd.append(self.url)

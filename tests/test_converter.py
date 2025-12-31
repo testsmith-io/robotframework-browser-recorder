@@ -37,6 +37,24 @@ class TestPlaywrightToRobotConverter:
         assert actions[0]["selector"] == "#username"
         assert actions[0]["value"] == "testuser"
 
+    def test_convert_fill_with_locator(self):
+        """Test converting fill action with locator chain."""
+        playwright_code = 'page.locator("#username").fill("testuser")'
+        actions = self.converter._parse_playwright_code(playwright_code)
+        assert len(actions) == 1
+        assert actions[0]["type"] == "fill"
+        assert actions[0]["selector"] == "#username"
+        assert actions[0]["value"] == "testuser"
+
+    def test_convert_select_option_with_locator(self):
+        """Test converting select_option with locator chain."""
+        playwright_code = 'page.locator("#country").select_option("USA")'
+        actions = self.converter._parse_playwright_code(playwright_code)
+        assert len(actions) == 1
+        assert actions[0]["type"] == "select_option"
+        assert actions[0]["selector"] == "#country"
+        assert actions[0]["value"] == "USA"
+
     def test_convert_check(self):
         """Test converting check action."""
         playwright_code = 'page.check("#agree-checkbox")'

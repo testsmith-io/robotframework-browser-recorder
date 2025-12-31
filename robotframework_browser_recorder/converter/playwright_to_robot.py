@@ -209,11 +209,25 @@ class PlaywrightToRobotConverter:
         return None
 
     def _extract_fill_args(self, line: str) -> Tuple[Optional[str], Optional[str]]:
-        """Extract selector and value from fill action."""
-        # Extract both selector and value from .fill(selector, value)
+        """Extract selector and value from fill action.
+
+        Handles both:
+        - page.fill("selector", "value")
+        - page.locator("selector").fill("value")
+        """
         parts = line.split(".fill(")
         if len(parts) > 1:
-            # Match two quoted strings: .fill("selector", "value")
+            # First check for locator chain: page.locator("selector").fill("value")
+            selector = self._extract_selector(line)
+            if selector:
+                # Extract the fill value (single argument)
+                value_pattern = r'\.fill\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)'
+                value_match = re.search(value_pattern, line)
+                if value_match:
+                    value = value_match.group(1).replace(r"\"", '"').replace(r"\'", "'")
+                    return selector, value
+
+            # Fallback: Check for page.fill("selector", "value")
             pattern = (
                 r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\s*,\s*'
                 r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)'
@@ -243,11 +257,25 @@ class PlaywrightToRobotConverter:
         return None, None
 
     def _extract_select_args(self, line: str) -> Tuple[Optional[str], Optional[str]]:
-        """Extract selector and value from select_option action."""
-        # Extract both selector and value from .select_option(selector, value)
+        """Extract selector and value from select_option action.
+
+        Handles both:
+        - page.select_option("selector", "value")
+        - page.locator("selector").select_option("value")
+        """
         parts = line.split(".select_option(")
         if len(parts) > 1:
-            # Match two quoted strings: .select_option("selector", "value")
+            # First check for locator chain: page.locator("selector").select_option("value")
+            selector = self._extract_selector(line)
+            if selector:
+                # Extract the select value (single argument)
+                value_pattern = r'\.select_option\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)'
+                value_match = re.search(value_pattern, line)
+                if value_match:
+                    value = value_match.group(1).replace(r"\"", '"').replace(r"\'", "'")
+                    return selector, value
+
+            # Fallback: Check for page.select_option("selector", "value")
             pattern = (
                 r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\s*,\s*'
                 r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)'

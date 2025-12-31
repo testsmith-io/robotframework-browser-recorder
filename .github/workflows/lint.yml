@@ -1,0 +1,32 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+
+    - name: Run Black (code formatter check)
+      run: |
+        black --check robotframework_browser_recorder/ tests/
+
+    - name: Run Flake8 (linter)
+      run: |
+        flake8 robotframework_browser_recorder/ tests/ --max-line-length=100 --extend-ignore=E203,W503

@@ -28,6 +28,11 @@ class PlaywrightToRobotConverter:
             "locator": self._convert_locator,
             "wait_for_load_state": self._convert_wait_for_load_state,
             "screenshot": self._convert_screenshot,
+            "expect_visible": self._convert_expect_visible,
+            "expect_text": self._convert_expect_text,
+            "expect_value": self._convert_expect_value,
+            "expect_url": self._convert_expect_url,
+            "expect_title": self._convert_expect_title,
         }
 
     def convert(
@@ -131,6 +136,37 @@ class PlaywrightToRobotConverter:
                 state = self._extract_string_arg(line) or "networkidle"
                 actions.append({"type": "wait_for_load_state", "state": state})
 
+            elif "expect(" in line:
+                # Handle Playwright expect assertions
+                if ".to_be_visible()" in line:
+                    selector = self._extract_expect_selector(line)
+                    if selector:
+                        actions.append({"type": "expect_visible", "selector": selector})
+
+                elif ".to_have_text(" in line or ".to_contain_text(" in line:
+                    selector = self._extract_expect_selector(line)
+                    text = self._extract_expect_text_value(line)
+                    if selector and text:
+                        actions.append({"type": "expect_text", "selector": selector, "text": text})
+
+                elif ".to_have_value(" in line:
+                    selector = self._extract_expect_selector(line)
+                    value = self._extract_expect_text_value(line)
+                    if selector and value:
+                        actions.append(
+                            {"type": "expect_value", "selector": selector, "value": value}
+                        )
+
+                elif ".to_have_url(" in line:
+                    url = self._extract_expect_text_value(line)
+                    if url:
+                        actions.append({"type": "expect_url", "url": url})
+
+                elif ".to_have_title(" in line:
+                    title = self._extract_expect_text_value(line)
+                    if title:
+                        actions.append({"type": "expect_title", "title": title})
+
         return actions
 
     def _extract_string_arg(self, line: str, arg_name: Optional[str] = None) -> Optional[str]:
@@ -223,6 +259,40 @@ class PlaywrightToRobotConverter:
                 return selector, value
         return None, None
 
+    def _extract_expect_selector(self, line: str) -> Optional[str]:
+        """Extract selector from expect() statement.
+
+        Handles: expect(page.locator("selector")).to_be_visible()
+        """
+        # Pattern: expect(page.locator("selector") or expect(locator)
+        patterns = [
+            r'expect\(page\.locator\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']',
+            r'expect\(page\.get_by_[a-z_]+\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, line)
+            if match:
+                selector = match.group(1)
+                selector = selector.replace(r"\"", '"').replace(r"\'", "'")
+                return selector
+        return None
+
+    def _extract_expect_text_value(self, line: str) -> Optional[str]:
+        """Extract text/value from expect assertion.
+
+        Handles: .to_have_text("value") or .to_contain_text("value")
+        """
+        # Find the last quoted string in the line (the assertion value)
+        pattern = r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\s*\)'
+        matches = list(re.finditer(pattern, line))
+        if matches:
+            # Get the last match (the assertion value, not the selector)
+            value = matches[-1].group(1)
+            value = value.replace(r"\"", '"').replace(r"\'", "'")
+            return value
+        return None
+
     def _simplify_selector(self, selector: str) -> str:
         """Simplify selector for Robot Framework syntax.
 
@@ -301,6 +371,36 @@ class PlaywrightToRobotConverter:
         """Convert screenshot action to Robot Framework."""
         path = action.get("path", "screenshot.png")
         return f"Take Screenshot{self.indent}{path}"
+
+    def _convert_expect_visible(self, action: Dict) -> str:
+        """Convert expect visible assertion to Robot Framework."""
+        selector = self._simplify_selector(action.get("selector", ""))
+        return f"Get Element States{self.indent}{selector}{self.indent}validate{self.indent}visible"
+
+    def _convert_expect_text(self, action: Dict) -> str:
+        """Convert expect text assertion to Robot Framework."""
+        selector = self._simplify_selector(action.get("selector", ""))
+        text = action.get("text", "")
+        return f"Get Text{self.indent}{selector}{self.indent}=={self.indent}{text}"
+
+    def _convert_expect_value(self, action: Dict) -> str:
+        """Convert expect value assertion to Robot Framework."""
+        selector = self._simplify_selector(action.get("selector", ""))
+        value = action.get("value", "")
+        return (
+            f"Get Property{self.indent}{selector}{self.indent}"
+            f"value{self.indent}=={self.indent}{value}"
+        )
+
+    def _convert_expect_url(self, action: Dict) -> str:
+        """Convert expect URL assertion to Robot Framework."""
+        url = action.get("url", "")
+        return f"Get Url{self.indent}=={self.indent}{url}"
+
+    def _convert_expect_title(self, action: Dict) -> str:
+        """Convert expect title assertion to Robot Framework."""
+        title = action.get("title", "")
+        return f"Get Title{self.indent}=={self.indent}{title}"
 
     def _convert_locator(self, action: Dict) -> str:
         """Handle locator-based actions."""

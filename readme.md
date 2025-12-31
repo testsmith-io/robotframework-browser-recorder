@@ -98,59 +98,11 @@ rfbrowser-record --browser firefox --url https://example.com
 rfbrowser-record --url https://example.com --output my_test.robot
 ```
 
-### Python API
-
-You can also use the recorder programmatically:
-
-```python
-from robotframework_browser_recorder import BrowserRecorder
-
-# Create a recorder instance (Chromium by default)
-recorder = BrowserRecorder(
-    output_file="my_test.robot",
-    test_name="My Custom Test",
-    url="https://example.com"
-)
-
-# Start recording
-recorder.record()
-
-# Or use Firefox
-recorder_ff = BrowserRecorder(
-    browser="firefox",
-    output_file="my_test.robot",
-    url="https://example.com"
-)
-recorder_ff.record()
-```
-
-### Converting Playwright Code
-
-If you already have Playwright Python code, you can convert it:
-
-```python
-from robotframework_browser_recorder import PlaywrightToRobotConverter
-
-playwright_code = """
-page.goto("https://example.com")
-page.locator("[data-test='login']").click()
-page.locator("[data-test='username']").fill("testuser")
-page.locator("[data-test='password']").fill("testpass")
-page.locator("[data-test='submit']").click()
-"""
-
-converter = PlaywrightToRobotConverter()
-robot_test = converter.convert(
-    playwright_code=playwright_code,
-    test_name="Login Test"
-)
-
-print(robot_test)
-```
-
 ## Supported Actions
 
 The converter supports the following Playwright actions:
+
+### Interactions
 
 | Playwright Action | Robot Framework Keyword |
 |-------------------|-------------------------|
@@ -165,6 +117,17 @@ The converter supports the following Playwright actions:
 | `page.dblclick(selector)` | `Click    selector    clickCount=2` |
 | `page.screenshot(path=path)` | `Take Screenshot    path` |
 | `page.wait_for_load_state(state)` | `Wait For Load State    state` |
+
+### Assertions / Verifications
+
+| Playwright Assertion | Robot Framework Keyword |
+|---------------------|-------------------------|
+| `expect(locator).to_be_visible()` | `Get Element States    selector    validate    visible` |
+| `expect(locator).to_have_text(text)` | `Get Text    selector    ==    text` |
+| `expect(locator).to_contain_text(text)` | `Get Text    selector    ==    text` |
+| `expect(locator).to_have_value(value)` | `Get Property    selector    value    ==    value` |
+| `expect(page).to_have_url(url)` | `Get Url    ==    url` |
+| `expect(page).to_have_title(title)` | `Get Title    ==    title` |
 
 ## Example Output
 

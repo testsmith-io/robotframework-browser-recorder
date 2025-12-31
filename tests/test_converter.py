@@ -121,3 +121,63 @@ page.goto("https://example.com")
         actions = self.converter._parse_playwright_code(playwright_code)
         assert len(actions) == 1
         assert actions[0]["type"] == "goto"
+
+    def test_convert_expect_visible(self):
+        """Test converting expect().to_be_visible() assertion."""
+        playwright_code = 'expect(page.locator("#message")).to_be_visible()'
+        actions = self.converter._parse_playwright_code(playwright_code)
+        assert len(actions) == 1
+        assert actions[0]["type"] == "expect_visible"
+        assert actions[0]["selector"] == "#message"
+
+    def test_convert_expect_text(self):
+        """Test converting expect().to_have_text() assertion."""
+        playwright_code = 'expect(page.locator("#title")).to_have_text("Welcome")'
+        actions = self.converter._parse_playwright_code(playwright_code)
+        assert len(actions) == 1
+        assert actions[0]["type"] == "expect_text"
+        assert actions[0]["selector"] == "#title"
+        assert actions[0]["text"] == "Welcome"
+
+    def test_convert_expect_value(self):
+        """Test converting expect().to_have_value() assertion."""
+        playwright_code = 'expect(page.locator("#email")).to_have_value("test@example.com")'
+        actions = self.converter._parse_playwright_code(playwright_code)
+        assert len(actions) == 1
+        assert actions[0]["type"] == "expect_value"
+        assert actions[0]["selector"] == "#email"
+        assert actions[0]["value"] == "test@example.com"
+
+    def test_convert_expect_url(self):
+        """Test converting expect(page).to_have_url() assertion."""
+        playwright_code = 'expect(page).to_have_url("https://example.com/dashboard")'
+        actions = self.converter._parse_playwright_code(playwright_code)
+        assert len(actions) == 1
+        assert actions[0]["type"] == "expect_url"
+        assert actions[0]["url"] == "https://example.com/dashboard"
+
+    def test_convert_expect_title(self):
+        """Test converting expect(page).to_have_title() assertion."""
+        playwright_code = 'expect(page).to_have_title("Dashboard")'
+        actions = self.converter._parse_playwright_code(playwright_code)
+        assert len(actions) == 1
+        assert actions[0]["type"] == "expect_title"
+        assert actions[0]["title"] == "Dashboard"
+
+    def test_convert_with_assertions(self):
+        """Test converting a complete flow with assertions."""
+        playwright_code = """
+page.goto("https://example.com/login")
+page.fill("#username", "user1")
+page.fill("#password", "pass123")
+page.click("#submit")
+expect(page).to_have_url("https://example.com/dashboard")
+expect(page.locator("#welcome-message")).to_be_visible()
+expect(page.locator("#welcome-message")).to_have_text("Welcome, user1!")
+"""
+        actions = self.converter._parse_playwright_code(playwright_code)
+        assert len(actions) == 7
+        assert actions[0]["type"] == "goto"
+        assert actions[4]["type"] == "expect_url"
+        assert actions[5]["type"] == "expect_visible"
+        assert actions[6]["type"] == "expect_text"

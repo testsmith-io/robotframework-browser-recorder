@@ -160,56 +160,65 @@ class PlaywrightToRobotConverter:
             if match:
                 # Unescape the selector (remove backslashes before quotes)
                 selector = match.group(1)
-                selector = selector.replace(r'\"', '"').replace(r"\'", "'")
+                selector = selector.replace(r"\"", '"').replace(r"\'", "'")
                 return selector
 
         # Fallback pattern with escaped character support
         match = re.search(r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)', line)
         if match:
             selector = match.group(1)
-            selector = selector.replace(r'\"', '"').replace(r"\'", "'")
+            selector = selector.replace(r"\"", '"').replace(r"\'", "'")
             return selector
 
         return None
 
     def _extract_fill_args(self, line: str) -> Tuple[Optional[str], Optional[str]]:
         """Extract selector and value from fill action."""
-        selector = self._extract_selector(line)
+        # Extract both selector and value from .fill(selector, value)
         parts = line.split(".fill(")
         if len(parts) > 1:
-            # Handle escaped characters in the value
-            value_match = re.search(r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)', parts[1])
-            if value_match:
-                value = value_match.group(1)
-                value = value.replace(r'\"', '"').replace(r"\'", "'")
+            # Match two quoted strings: .fill("selector", "value")
+            match = re.search(
+                r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\s*,\s*["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)',
+                parts[1],
+            )
+            if match:
+                selector = match.group(1).replace(r"\"", '"').replace(r"\'", "'")
+                value = match.group(2).replace(r"\"", '"').replace(r"\'", "'")
                 return selector, value
-        return selector, None
+        return None, None
 
     def _extract_press_args(self, line: str) -> Tuple[Optional[str], Optional[str]]:
         """Extract selector and key from press action."""
-        selector = self._extract_selector(line)
+        # Extract both selector and key from .press(selector, key)
         parts = line.split(".press(")
         if len(parts) > 1:
-            # Handle escaped characters in the key
-            key_match = re.search(r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)', parts[1])
-            if key_match:
-                key = key_match.group(1)
-                key = key.replace(r'\"', '"').replace(r"\'", "'")
+            # Match two quoted strings: .press("selector", "key")
+            match = re.search(
+                r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\s*,\s*["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)',
+                parts[1],
+            )
+            if match:
+                selector = match.group(1).replace(r"\"", '"').replace(r"\'", "'")
+                key = match.group(2).replace(r"\"", '"').replace(r"\'", "'")
                 return selector, key
-        return selector, None
+        return None, None
 
     def _extract_select_args(self, line: str) -> Tuple[Optional[str], Optional[str]]:
         """Extract selector and value from select_option action."""
-        selector = self._extract_selector(line)
+        # Extract both selector and value from .select_option(selector, value)
         parts = line.split(".select_option(")
         if len(parts) > 1:
-            # Handle escaped characters in the value
-            value_match = re.search(r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)', parts[1])
-            if value_match:
-                value = value_match.group(1)
-                value = value.replace(r'\"', '"').replace(r"\'", "'")
+            # Match two quoted strings: .select_option("selector", "value")
+            match = re.search(
+                r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\s*,\s*["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)',
+                parts[1],
+            )
+            if match:
+                selector = match.group(1).replace(r"\"", '"').replace(r"\'", "'")
+                value = match.group(2).replace(r"\"", '"').replace(r"\'", "'")
                 return selector, value
-        return selector, None
+        return None, None
 
     def _simplify_selector(self, selector: str) -> str:
         """Simplify selector for Robot Framework syntax.
@@ -229,7 +238,7 @@ class PlaywrightToRobotConverter:
 
         # Pattern for removing quotes from bracket selectors
         # e.g., [data-test="value"] -> [data-test=value]
-        selector = re.sub(r'\[([a-zA-Z-]+)=["\']([^"\']+)["\']\]', r'[\1=\2]', selector)
+        selector = re.sub(r'\[([a-zA-Z-]+)=["\']([^"\']+)["\']\]', r"[\1=\2]", selector)
 
         return selector
 
@@ -324,8 +333,12 @@ class PlaywrightToRobotConverter:
             test_name,
         ]
 
-        lines.append(f"{self.indent}New Browser{self.indent}{browser}{self.indent}headless={headless}")
-        lines.append(f"{self.indent}New Context{self.indent}viewport={{'width': 1920, 'height': 1080}}")
+        lines.append(
+            f"{self.indent}New Browser{self.indent}{browser}{self.indent}headless={headless}"
+        )
+        lines.append(
+            f"{self.indent}New Context{self.indent}viewport={{'width': 1920, 'height': 1080}}"
+        )
 
         for action in actions:
             action_type = action.get("type")

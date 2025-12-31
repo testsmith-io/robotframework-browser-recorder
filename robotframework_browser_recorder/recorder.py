@@ -41,9 +41,7 @@ class BrowserRecorder:
         Returns:
             Path to the generated Robot Framework test file
         """
-        with tempfile.NamedTemporaryFile(
-            mode="w+", suffix=".py", delete=False
-        ) as tmp_file:
+        with tempfile.NamedTemporaryFile(mode="w+", suffix=".py", delete=False) as tmp_file:
             tmp_path = tmp_file.name
 
         try:

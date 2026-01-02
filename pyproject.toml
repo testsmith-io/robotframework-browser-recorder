@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "robotframework-browser-recorder"
-version = "0.3.0"
+version = "0.4.0"
 description = "Record browser interactions and generate Robot Framework tests using Browser library"
 readme = "readme.md"
 requires-python = ">=3.8"

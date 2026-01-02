@@ -194,26 +194,51 @@ class PlaywrightToRobotConverter:
         return match.group(1) if match else None
 
     def _extract_selector(self, line: str) -> Optional[str]:
-        """Extract selector from a Playwright action."""
-        # Patterns that handle escaped characters (\\", \\') inside strings
-        patterns = [
-            r'locator\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)',
-            r'get_by_role\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)',
-            r'get_by_text\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)',
-            r'get_by_label\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)',
-            r'get_by_placeholder\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)',
-            r'get_by_test_id\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)',
+        """Extract selector from a Playwright action, handling chained locators.
+
+        Converts chained locators to Robot Framework >> syntax:
+        page.get_by_role("row").get_by_role("link") -> role=row >> role=link
+        """
+        # Find all locator methods in the line
+        locator_patterns = [
+            (r'locator\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)', lambda s: s),
+            (
+                (
+                    r'get_by_role\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']'
+                    r'(?:,\s*name=["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\'])?\)'
+                ),
+                lambda s, n=None: f'role={s}[name="{n}"]' if n else f"role={s}",
+            ),
+            (r'get_by_text\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)', lambda s: f"text={s}"),
+            (r'get_by_label\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)', lambda s: s),
+            (
+                r'get_by_placeholder\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)',
+                lambda s: f"placeholder={s}",
+            ),
+            (
+                r'get_by_test_id\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)',
+                lambda s: f"data-testid={s}",
+            ),
         ]
 
-        for pattern in patterns:
-            match = re.search(pattern, line)
-            if match:
-                # Unescape the selector (remove backslashes before quotes)
-                selector = match.group(1)
-                selector = selector.replace(r"\"", '"').replace(r"\'", "'")
-                return selector
+        selectors = []
 
-        # Fallback pattern with escaped character support
+        for pattern_str, formatter in locator_patterns:
+            pattern = re.compile(pattern_str)
+            for match in pattern.finditer(line):
+                groups = match.groups()
+                # Unescape
+                groups = tuple(
+                    g.replace(r"\"", '"').replace(r"\'", "'") if g else None for g in groups
+                )
+                selector = formatter(*groups)
+                selectors.append(selector)
+
+        if selectors:
+            # Chain selectors with >>
+            return " >> ".join(selectors)
+
+        # Fallback pattern
         match = re.search(r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)', line)
         if match:
             selector = match.group(1)

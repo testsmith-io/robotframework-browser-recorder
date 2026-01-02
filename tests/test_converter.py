@@ -109,7 +109,21 @@ page.click("text=Login")
         """Test extracting selector from get_by_text method."""
         line = 'page.get_by_text("Login").click()'
         selector = self.converter._extract_selector(line)
-        assert selector == "Login"
+        assert selector == "text=Login"
+
+    def test_extract_chained_selectors(self):
+        """Test extracting chained selectors."""
+        line = 'page.get_by_role("row", name="Test").get_by_role("link").click()'
+        selector = self.converter._extract_selector(line)
+        assert selector == 'role=row[name="Test"] >> role=link'
+
+    def test_convert_chained_locators(self):
+        """Test converting chained locator click action."""
+        playwright_code = 'page.locator("#container").locator(".item").click()'
+        actions = self.converter._parse_playwright_code(playwright_code)
+        assert len(actions) == 1
+        assert actions[0]["type"] == "click"
+        assert actions[0]["selector"] == "#container >> .item"
 
     def test_convert_hover(self):
         """Test converting hover action."""

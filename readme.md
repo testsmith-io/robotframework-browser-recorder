@@ -108,13 +108,14 @@ The converter supports the following Playwright actions:
 |-------------------|-------------------------|
 | `page.goto(url)` | `New Page    url` |
 | `page.click(selector)` or `.click()` | `Click    selector` |
-| `page.fill(selector, value)` or `.fill()` | `Type Text    selector    value` |
+| `page.fill(selector, value)` or `.fill(value)` | `Type Text    selector    value` |
 | `page.press(selector, key)` | `Keyboard Key    press    key` |
-| `page.check(selector)` | `Check Checkbox    selector` |
-| `page.uncheck(selector)` | `Uncheck Checkbox    selector` |
-| `page.select_option(selector, value)` | `Select Options By    selector    value    value` |
-| `page.hover(selector)` | `Hover    selector` |
-| `page.dblclick(selector)` | `Click    selector    clickCount=2` |
+| `page.check(selector)` or `.check()` | `Check Checkbox    selector` |
+| `page.uncheck(selector)` or `.uncheck()` | `Uncheck Checkbox    selector` |
+| `page.select_option(selector, value)` or `.select_option(value)` | `Select Options By    selector    value    value` |
+| `page.set_input_files(selector, file)` or `.set_input_files(file)` | `Upload File By Selector    selector    file` |
+| `page.hover(selector)` or `.hover()` | `Hover    selector` |
+| `page.dblclick(selector)` or `.dblclick()` | `Click    selector    clickCount=2` |
 | `page.screenshot(path=path)` | `Take Screenshot    path` |
 | `page.wait_for_load_state(state)` | `Wait For Load State    state` |
 
@@ -126,6 +127,7 @@ The converter supports the following Playwright actions:
 | `expect(locator).to_have_text(text)` | `Get Text    selector    ==    text` |
 | `expect(locator).to_contain_text(text)` | `Get Text    selector    ==    text` |
 | `expect(locator).to_have_value(value)` | `Get Property    selector    value    ==    value` |
+| `expect(locator).to_be_checked()` | `Get Checkbox State    selector    ==    checked` |
 | `expect(page).to_have_url(url)` | `Get Url    ==    url` |
 | `expect(page).to_have_title(title)` | `Get Title    ==    title` |
 

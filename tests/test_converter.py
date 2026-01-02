@@ -166,6 +166,23 @@ page.goto("https://example.com")
         assert actions[0]["selector"] == "#email"
         assert actions[0]["value"] == "test@example.com"
 
+    def test_convert_expect_checked(self):
+        """Test converting expect().to_be_checked() assertion."""
+        playwright_code = 'expect(page.locator("#agree")).to_be_checked()'
+        actions = self.converter._parse_playwright_code(playwright_code)
+        assert len(actions) == 1
+        assert actions[0]["type"] == "expect_checked"
+        assert actions[0]["selector"] == "#agree"
+
+    def test_convert_set_input_files(self):
+        """Test converting set_input_files action with locator chain."""
+        playwright_code = 'page.locator("#upload").set_input_files("document.pdf")'
+        actions = self.converter._parse_playwright_code(playwright_code)
+        assert len(actions) == 1
+        assert actions[0]["type"] == "set_input_files"
+        assert actions[0]["selector"] == "#upload"
+        assert actions[0]["file_path"] == "document.pdf"
+
     def test_convert_expect_url(self):
         """Test converting expect(page).to_have_url() assertion."""
         playwright_code = 'expect(page).to_have_url("https://example.com/dashboard")'

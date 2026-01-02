@@ -20,6 +20,7 @@ class PlaywrightToRobotConverter:
             "uncheck": self._convert_uncheck,
             "hover": self._convert_hover,
             "dblclick": self._convert_dblclick,
+            "set_input_files": self._convert_set_input_files,
             "get_by_role": self._convert_locator,
             "get_by_text": self._convert_locator,
             "get_by_label": self._convert_locator,
@@ -31,6 +32,7 @@ class PlaywrightToRobotConverter:
             "expect_visible": self._convert_expect_visible,
             "expect_text": self._convert_expect_text,
             "expect_value": self._convert_expect_value,
+            "expect_checked": self._convert_expect_checked,
             "expect_url": self._convert_expect_url,
             "expect_title": self._convert_expect_title,
         }
@@ -127,6 +129,13 @@ class PlaywrightToRobotConverter:
                 if selector:
                     actions.append({"type": "dblclick", "selector": selector})
 
+            elif ".set_input_files(" in line or ".setInputFiles(" in line:
+                selector, file_path = self._extract_set_input_files_args(line)
+                if selector and file_path:
+                    actions.append(
+                        {"type": "set_input_files", "selector": selector, "file_path": file_path}
+                    )
+
             elif "screenshot(" in line:
                 path = self._extract_string_arg(line, arg_name="path")
                 if path:
@@ -156,6 +165,11 @@ class PlaywrightToRobotConverter:
                         actions.append(
                             {"type": "expect_value", "selector": selector, "value": value}
                         )
+
+                elif ".to_be_checked()" in line:
+                    selector = self._extract_expect_selector(line)
+                    if selector:
+                        actions.append({"type": "expect_checked", "selector": selector})
 
                 elif ".to_have_url(" in line:
                     url = self._extract_expect_text_value(line)
@@ -287,6 +301,40 @@ class PlaywrightToRobotConverter:
                 return selector, value
         return None, None
 
+    def _extract_set_input_files_args(self, line: str) -> Tuple[Optional[str], Optional[str]]:
+        """Extract selector and file path from set_input_files action.
+
+        Handles both:
+        - page.set_input_files("selector", "file.pdf")
+        - page.locator("selector").set_input_files("file.pdf")
+        """
+        parts = line.split(".set_input_files(") or line.split(".setInputFiles(")
+        if len(parts) > 1:
+            # First check for locator chain
+            selector = self._extract_selector(line)
+            if selector:
+                # Extract the file path (single argument)
+                file_pattern = r'\.set_input_files\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)'
+                file_match = re.search(file_pattern, line)
+                if not file_match:
+                    file_pattern = r'\.setInputFiles\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)'
+                    file_match = re.search(file_pattern, line)
+                if file_match:
+                    file_path = file_match.group(1).replace(r"\"", '"').replace(r"\'", "'")
+                    return selector, file_path
+
+            # Fallback: Check for page.set_input_files("selector", "file")
+            pattern = (
+                r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\s*,\s*'
+                r'["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)'
+            )
+            match = re.search(pattern, parts[1])
+            if match:
+                selector = match.group(1).replace(r"\"", '"').replace(r"\'", "'")
+                file_path = match.group(2).replace(r"\"", '"').replace(r"\'", "'")
+                return selector, file_path
+        return None, None
+
     def _extract_expect_selector(self, line: str) -> Optional[str]:
         """Extract selector from expect() statement.
 
@@ -390,6 +438,12 @@ class PlaywrightToRobotConverter:
         selector = self._simplify_selector(action.get("selector", ""))
         return f"Click{self.indent}{selector}{self.indent}clickCount=2"
 
+    def _convert_set_input_files(self, action: Dict) -> str:
+        """Convert set_input_files action to Robot Framework."""
+        selector = self._simplify_selector(action.get("selector", ""))
+        file_path = action.get("file_path", "")
+        return f"Upload File By Selector{self.indent}{selector}{self.indent}{file_path}"
+
     def _convert_wait_for_load_state(self, action: Dict) -> str:
         """Convert wait_for_load_state to Robot Framework."""
         state = action.get("state", "networkidle")
@@ -419,6 +473,11 @@ class PlaywrightToRobotConverter:
             f"Get Property{self.indent}{selector}{self.indent}"
             f"value{self.indent}=={self.indent}{value}"
         )
+
+    def _convert_expect_checked(self, action: Dict) -> str:
+        """Convert expect checked assertion to Robot Framework."""
+        selector = self._simplify_selector(action.get("selector", ""))
+        return f"Get Checkbox State{self.indent}{selector}{self.indent}=={self.indent}checked"
 
     def _convert_expect_url(self, action: Dict) -> str:
         """Convert expect URL assertion to Robot Framework."""

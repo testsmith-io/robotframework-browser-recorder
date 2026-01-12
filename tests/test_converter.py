@@ -115,7 +115,7 @@ page.click("text=Login")
         """Test extracting chained selectors."""
         line = 'page.get_by_role("row", name="Test").get_by_role("link").click()'
         selector = self.converter._extract_selector(line)
-        assert selector == 'role=row[name="Test"] >> role=link'
+        assert selector == "role=row[name='Test'] >> role=link"
 
     def test_convert_chained_locators(self):
         """Test converting chained locator click action."""

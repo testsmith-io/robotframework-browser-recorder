@@ -207,7 +207,7 @@ class PlaywrightToRobotConverter:
                     r'get_by_role\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']'
                     r'(?:,\s*name=["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\'])?\)'
                 ),
-                lambda s, n=None: f'role={s}[name="{n}"]' if n else f"role={s}",
+                lambda s, n=None: f"role={s}[name='{n}']" if n else f"role={s}",
             ),
             (r'get_by_text\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)', lambda s: f"text={s}"),
             (r'get_by_label\(["\']([^"\'\\]*(?:\\.[^"\'\\]*)*)["\']\)', lambda s: s),
@@ -400,9 +400,18 @@ class PlaywrightToRobotConverter:
         Converts:
         - [data-test="value"] -> data-test=value
         - [id="value"] -> id=value
-        - Other bracket selectors with quotes -> remove quotes
+        - But preserves quotes in role/text selectors (role=button[name='I Accept'])
         """
         import re
+
+        # Don't simplify selectors that start with role=, text=, placeholder=, data-testid=
+        # These are already in the correct Robot Framework format
+        if selector.startswith(("role=", "text=", "placeholder=", "data-testid=")):
+            return selector
+
+        # Don't simplify chained selectors (containing >>)
+        if ">>" in selector:
+            return selector
 
         # Pattern for [attribute="value"] or [attribute='value']
         match = re.match(r'^\[([a-zA-Z-]+)=["\']([^"\']+)["\']\]$', selector)

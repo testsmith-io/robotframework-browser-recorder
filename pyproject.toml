@@ -46,10 +46,10 @@ dev = [
 rfbrowser-record = "robotframework_browser_recorder.cli.main:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/robotframework-browser-recorder"
-Documentation = "https://github.com/yourusername/robotframework-browser-recorder#readme"
-Repository = "https://github.com/yourusername/robotframework-browser-recorder"
-Issues = "https://github.com/yourusername/robotframework-browser-recorder/issues"
+Homepage = "https://github.com/testsmith-io/robotframework-browser-recorder"
+Documentation = "https://github.com/testsmith-io/robotframework-browser-recorder#readme"
+Repository = "https://github.com/testsmith-io/robotframework-browser-recorder"
+Issues = "https://github.com/testsmith-io/robotframework-browser-recorder/issues"
 
 [tool.setuptools.packages.find]
 include = ["robotframework_browser_recorder*"]

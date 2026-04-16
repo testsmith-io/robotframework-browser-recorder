@@ -439,7 +439,7 @@ class PlaywrightToRobotConverter:
         """Convert fill action to Robot Framework."""
         selector = self._simplify_selector(action.get("selector", ""))
         value = action.get("value", "")
-        return f"Type Text{self.indent}{selector}{self.indent}{value}"
+        return f"Fill Text{self.indent}{selector}{self.indent}{value}"
 
     def _convert_press(self, action: Dict) -> str:
         """Convert press action to Robot Framework."""
